@@ -19,7 +19,9 @@ traefik:
         - apps
         - observability
       publishedService:
-        enabled: true
+        enabled: false
+      ingressEndpoint:
+        ip: 10.0.1.74
     kubernetesGateway:
       enabled: false
 
