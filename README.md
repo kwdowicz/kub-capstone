@@ -251,15 +251,15 @@ ignored-file checks, and `git diff --check`.
 
 ### 3. Provision the local cluster with Terraform
 
-- [ ] Define a small, pinned cluster with explicit name, node image/version,
+- [x] Define a small, pinned cluster with explicit name, node image/version,
       resource assumptions, CNI choice, and ingress port mappings.
-- [ ] Treat kubeconfig and Terraform state as sensitive local artifacts.
-- [ ] Produce an inspected saved plan before apply.
-- [ ] Apply and verify node readiness, system Pods, storage class behavior, DNS,
+- [x] Treat kubeconfig and Terraform state as sensitive local artifacts.
+- [x] Produce an inspected saved plan before apply.
+- [x] Apply and verify node readiness, system Pods, storage class behavior, DNS,
       CNI health, and actual NetworkPolicy capability.
-- [ ] Confirm the Docker container/network boundary and the difference between
+- [x] Confirm the Docker container/network boundary and the difference between
       Pod IP, Service IP, node/container IP, Windows host IP, and LAN IP.
-- [ ] Run a no-change Terraform plan.
+- [x] Run a no-change Terraform plan.
 
 Rollback: Terraform destroys only the cluster it created. Do not use broad Docker
 cleanup commands.
@@ -279,9 +279,9 @@ resources.
 
 ### 5. Publish the infrastructure repository and establish GitOps
 
-- [ ] With explicit authorization, create or connect the GitHub infrastructure
+- [x] With explicit authorization, create or connect the GitHub infrastructure
       repository and push the reviewed baseline.
-- [ ] Prefer a public read-only repository for the first lab if no secrets are
+- [x] Prefer a public read-only repository for the first lab if no secrets are
       present; otherwise configure credentials through protected secrets.
 - [ ] Create an Argo CD AppProject with explicit source repositories,
       destinations, namespace policy, and resource allow/deny boundaries.

@@ -33,8 +33,9 @@ Verified on 2026-07-29:
 - Host Ethernet address `10.0.1.74/24`, gateway `10.0.1.1`.
 - Ports 80 and 443 had no listener.
 - All Windows Firewall profiles were enabled.
-- GitHub CLI was installed but not authenticated. No external repository was
-  created during the local bootstrap.
+- GitHub CLI was initially unauthenticated. After the operator authenticated it,
+  the reviewed baseline was published as the public repository
+  `https://github.com/kwdowicz/kub-capstone`.
 
 Tool versions:
 
@@ -124,6 +125,69 @@ Observed results:
 
 ## 5. Cluster provisioning
 
-Pending at the time this section was created. The saved plan must be inspected
-and applied exactly, followed by Docker, Kubernetes, storage, DNS, API exposure,
-port-binding, NetworkPolicy, and no-change-plan verification.
+The inspected saved plan was applied from its own Terraform root:
+
+```powershell
+terraform -chdir=terraform/cluster apply cluster-create.tfplan
+$env:KUBECONFIG = (Resolve-Path .\.local\kubeconfig)
+kubectl get nodes -o wide
+kubectl get pods -A -o wide
+kubectl get storageclass
+kubectl get --raw='/readyz?verbose'
+terraform -chdir=terraform/cluster plan -detailed-exitcode -no-color
+```
+
+Observed results:
+
+- Terraform reported `1 added, 0 changed, 0 destroyed`.
+- Cluster `platform-capstone` and context `kind-platform-capstone` were created.
+- The control-plane node became `Ready` on Kubernetes v1.35.0.
+- API server, etcd, scheduler, controller-manager, CoreDNS, kube-proxy, Kindnet,
+  and the local-path provisioner were running.
+- StorageClass `standard` used `WaitForFirstConsumer` and reclaim policy
+  `Delete`; it is convenient local storage, not a high-availability design.
+- Every API `/readyz` check passed.
+- The Docker node used the expected pinned image digest. Its node/container IP
+  was `172.18.0.2`; Services and Pods use separate cluster address spaces.
+- Docker exposed API port 6443 only through random loopback port 62092. Host
+  `0.0.0.0:80` and `0.0.0.0:443` map to node ports 30080 and 30443. The Windows
+  LAN address remains `10.0.1.74`; those four address types are not
+  interchangeable.
+- A second Terraform plan returned exit code 0 and `No changes`.
+
+State and `.local/kubeconfig` remain ignored local credentials. Destroying this
+root deletes the exact Kind cluster; broad Docker cleanup is never required.
+
+## 6. NetworkPolicy behavior proof
+
+`tests/network-policy` creates a temporary namespace, an unprivileged nginx
+server and probe, and two policies. `scripts/test-network-policy.ps1` verifies
+three states: baseline traffic succeeds, selected ingress is denied, then a
+label-scoped allow restores it. It always deletes the namespace in `finally`.
+
+```powershell
+& .\scripts\test-network-policy.ps1
+```
+
+Final evidence was `NetworkPolicyTest=PASS`. The first attempt also documented
+two useful harness failures: a separate multi-platform curl image was slow to
+pull and failed Kind's containerd import, and Windows PowerShell elevated the
+expected denied probe's stderr into a terminating error. The durable test now
+reuses the already-pulled nginx Alpine image for `wget` and locally relaxes
+PowerShell error handling only around the connection that is expected to fail.
+These were test-harness corrections; the observed deny timeout confirmed that
+Kindnet enforcement was active.
+
+## 7. Git publication
+
+After explicit GitHub authorization, the secret scan was clean and the public
+repository was created and pushed:
+
+```powershell
+gh repo create kwdowicz/kub-capstone --public --source . --remote origin --push
+git remote -v
+```
+
+The repository is public specifically so Argo CD can clone desired state
+read-only without a repository credential. No Terraform state, saved plan,
+kubeconfig, token, private key, or environment secret was published.

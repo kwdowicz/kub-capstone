@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: policy-smoke
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server
+  namespace: policy-smoke
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: policy-server
+  template:
+    metadata:
+      labels:
+        app: policy-server
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: nginx
+          image: nginxinc/nginx-unprivileged:1.27.4-alpine
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            runAsNonRoot: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server
+  namespace: policy-smoke
+spec:
+  selector:
+    app: policy-server
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+  namespace: policy-smoke
+  labels:
+    role: policy-client
+spec:
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: probe
+      # Reuse the server image so a clean cluster needs only one image pull.
+      image: nginxinc/nginx-unprivileged:1.27.4-alpine
+      command:
+        - /bin/sh
+        - -c
+        - sleep 3600
+      resources:
+        requests:
+          cpu: 5m
+          memory: 8Mi
+        limits:
+          cpu: 50m
+          memory: 32Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        runAsNonRoot: true
