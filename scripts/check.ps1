@@ -9,9 +9,11 @@ try {
         throw "terraform fmt check failed with exit code $LASTEXITCODE"
     }
 
-    terraform -chdir=terraform/cluster validate
-    if ($LASTEXITCODE -ne 0) {
-        throw "terraform validate failed with exit code $LASTEXITCODE"
+    foreach ($terraformRoot in @("terraform/cluster", "terraform/bootstrap")) {
+        terraform "-chdir=$terraformRoot" validate
+        if ($LASTEXITCODE -ne 0) {
+            throw "terraform validate failed for $terraformRoot with exit code $LASTEXITCODE"
+        }
     }
 
     git diff --check

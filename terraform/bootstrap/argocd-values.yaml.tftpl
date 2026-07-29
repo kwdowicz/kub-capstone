@@ -1,0 +1,107 @@
+crds:
+  install: true
+  keep: false
+
+global:
+  domain: argocd.platform.test
+  logging:
+    format: json
+  networkPolicy:
+    create: true
+    defaultDenyIngress: false
+
+configs:
+  cm:
+    admin.enabled: true
+    application.resourceTrackingMethod: annotation
+  params:
+    server.insecure: true
+
+controller:
+  metrics:
+    enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+dex:
+  enabled: false
+
+redis:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+server:
+  metrics:
+    enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+repoServer:
+  metrics:
+    enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+applicationSet:
+  replicas: 0
+
+notifications:
+  enabled: false
+
+extraObjects:
+  - apiVersion: argoproj.io/v1alpha1
+    kind: AppProject
+    metadata:
+      name: capstone-bootstrap
+      namespace: argocd
+    spec:
+      description: Terraform-owned boundary for the single root GitOps application.
+      sourceRepos:
+        - ${repository_url}
+      destinations:
+        - namespace: argocd
+          server: https://kubernetes.default.svc
+      namespaceResourceWhitelist:
+        - group: argoproj.io
+          kind: Application
+        - group: argoproj.io
+          kind: AppProject
+      orphanedResources:
+        warn: true
+  - apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: capstone-root
+      namespace: argocd
+    spec:
+      project: capstone-bootstrap
+      source:
+        repoURL: ${repository_url}
+        targetRevision: ${revision}
+        path: gitops/root
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: argocd
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=false
