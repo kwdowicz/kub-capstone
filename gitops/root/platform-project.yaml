@@ -29,8 +29,5 @@ spec:
       kind: ClusterRoleBinding
     - group: networking.k8s.io
       kind: IngressClass
-  namespaceResourceBlacklist:
-    - group: ""
-      kind: ResourceQuota
   orphanedResources:
     warn: true

@@ -3,6 +3,7 @@
 *.tfstate
 *.tfstate.*
 *.tfplan
+**/charts/*.tgz
 
 # Terraform inputs that can contain credentials or machine-specific values.
 *.tfvars
