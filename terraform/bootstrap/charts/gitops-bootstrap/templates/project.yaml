@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: capstone-bootstrap
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/part-of: capstone-bootstrap
+spec:
+  description: Terraform-owned boundary for the single root GitOps application.
+  sourceRepos:
+    - {{ .Values.repositoryUrl | quote }}
+  destinations:
+    - namespace: {{ .Release.Namespace }}
+      server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+    - group: argoproj.io
+      kind: Application
+    - group: argoproj.io
+      kind: AppProject
+  orphanedResources:
+    warn: true

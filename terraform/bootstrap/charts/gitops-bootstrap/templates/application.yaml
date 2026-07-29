@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: capstone-root
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/part-of: capstone-bootstrap
+spec:
+  project: capstone-bootstrap
+  source:
+    repoURL: {{ .Values.repositoryUrl | quote }}
+    targetRevision: {{ .Values.revision | quote }}
+    path: gitops/root
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Release.Namespace }}
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false

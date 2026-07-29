@@ -47,9 +47,27 @@ resource "helm_release" "argocd" {
   wait_for_jobs   = true
 
   values = [
-    templatefile("${path.module}/argocd-values.yaml.tftpl", {
-      repository_url = var.gitops_repository_url
-      revision       = var.gitops_revision
+    file("${path.module}/argocd-values.yaml")
+  ]
+}
+
+resource "helm_release" "gitops_entrypoint" {
+  name      = "capstone-gitops-bootstrap"
+  namespace = kubernetes_namespace_v1.argocd.metadata[0].name
+  chart     = "${path.module}/charts/gitops-bootstrap"
+
+  atomic          = true
+  cleanup_on_fail = true
+  max_history     = 5
+  timeout         = 300
+  wait            = true
+
+  values = [
+    yamlencode({
+      repositoryUrl = var.gitops_repository_url
+      revision      = var.gitops_revision
     })
   ]
+
+  depends_on = [helm_release.argocd]
 }

@@ -12,3 +12,8 @@ output "root_application" {
   description = "Terraform-owned Argo CD entrypoint; all child desired state is owned by Argo CD."
   value       = "capstone-root"
 }
+
+output "bootstrap_releases" {
+  description = "Helm releases retained by bootstrap Terraform."
+  value       = [helm_release.argocd.name, helm_release.gitops_entrypoint.name]
+}
