@@ -1,0 +1,34 @@
+# Terraform downloads and local runtime state.
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+
+# Terraform inputs that can contain credentials or machine-specific values.
+*.tfvars
+*.tfvars.json
+!*.example.tfvars
+
+# Terraform crash, CLI, and override files.
+crash.log
+crash.*.log
+.terraformrc
+terraform.rc
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Project-local kubeconfig and generated runtime artifacts.
+.local/
+.tmp/
+temp/
+
+# Local environment and private-key material.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
