@@ -18,5 +18,3 @@ spec:
       kind: Application
     - group: argoproj.io
       kind: AppProject
-  orphanedResources:
-    warn: true

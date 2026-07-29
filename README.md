@@ -266,13 +266,13 @@ cleanup commands.
 
 ### 4. Bootstrap Argo CD with a separate Terraform root
 
-- [ ] Create the narrowly scoped bootstrap root and state.
-- [ ] Configure Kubernetes and Helm providers from the new cluster connection.
-- [ ] Install a resource-conscious, non-HA Argo CD with pinned chart and images.
-- [ ] Define exactly which bootstrap objects Terraform keeps owning.
-- [ ] Validate Argo CD Pods, API health, CLI access, and UI access.
-- [ ] Prove a second Terraform plan is empty.
-- [ ] Write the Argo recovery and Terraform destroy order before adding apps.
+- [x] Create the narrowly scoped bootstrap root and state.
+- [x] Configure Kubernetes and Helm providers from the new cluster connection.
+- [x] Install a resource-conscious, non-HA Argo CD with pinned chart and images.
+- [x] Define exactly which bootstrap objects Terraform keeps owning.
+- [x] Validate Argo CD Pods, API health, CLI access, and UI access.
+- [x] Prove a second Terraform plan is empty.
+- [x] Write the Argo recovery and Terraform destroy order before adding apps.
 
 Exit gate: Argo CD is healthy, but it does not yet silently own unrelated
 resources.
@@ -283,11 +283,11 @@ resources.
       repository and push the reviewed baseline.
 - [x] Prefer a public read-only repository for the first lab if no secrets are
       present; otherwise configure credentials through protected secrets.
-- [ ] Create an Argo CD AppProject with explicit source repositories,
+- [x] Create an Argo CD AppProject with explicit source repositories,
       destinations, namespace policy, and resource allow/deny boundaries.
-- [ ] Add a root Application or small app-of-apps bootstrap.
-- [ ] Inspect sync, diff, health, history, and the exact pruning boundary.
-- [ ] Enable automated sync, pruning, and self-healing only after a manual sync
+- [x] Add a root Application or small app-of-apps bootstrap.
+- [x] Inspect sync, diff, health, history, and the exact pruning boundary.
+- [x] Enable automated sync, pruning, and self-healing only after a manual sync
       proves the boundary is safe.
 
 ### 6. Establish ingress, LAN routing, DNS, and TLS

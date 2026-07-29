@@ -2,5 +2,5 @@ apiVersion: v2
 name: gitops-bootstrap
 description: Terraform-owned Argo CD root project and application.
 type: application
-version: 0.1.1
+version: 0.1.2
 appVersion: "1.0"

@@ -191,3 +191,60 @@ git remote -v
 The repository is public specifically so Argo CD can clone desired state
 read-only without a repository credential. No Terraform state, saved plan,
 kubeconfig, token, private key, or environment secret was published.
+
+## 8. Argo CD bootstrap and first reconciliation
+
+Current primary sources were checked before pinning. Bootstrap uses official
+HashiCorp Helm provider 3.2.0, Kubernetes provider 3.2.1, and Argo CD chart
+10.1.3 (application v3.4.5). Terraform state is isolated under
+`terraform/bootstrap`.
+
+Terraform permanently owns exactly these objects:
+
+- Namespace `argocd`;
+- Helm release `argocd`, including CRDs and the resource-conscious non-HA
+  runtime;
+- Helm release `capstone-gitops-bootstrap`, containing only AppProject
+  `capstone-bootstrap` and Application `capstone-root`.
+
+The root Application owns `gitops/root`, beginning with AppProject
+`capstone-platform`. All later platform components and workloads descend from
+that Git boundary and are never added to Terraform state.
+
+The first apply failed safely because putting `Application` objects in the main
+chart's `extraObjects` made the Helm provider validate them before their CRDs
+existed. Atomic cleanup removed that release and left only the already-created
+namespace in state. The correction split the two custom resources into a tiny
+local Helm chart with an explicit dependency on the Argo CD release.
+
+```powershell
+terraform -chdir=terraform/bootstrap init
+terraform -chdir=terraform/bootstrap validate
+helm lint .\terraform\bootstrap\charts\gitops-bootstrap
+terraform -chdir=terraform/bootstrap plan "-out=argocd-bootstrap-v2.tfplan"
+terraform -chdir=terraform/bootstrap apply argocd-bootstrap-v2.tfplan
+```
+
+The corrected apply added both releases. The application controller, Redis,
+repo server, and API/UI server became Ready; Dex and notifications were
+disabled and ApplicationSet was scaled to zero. Four component NetworkPolicies
+and metric Services were created. An in-cluster `/healthz` probe returned `ok`.
+
+The root Application intentionally started `OutOfSync/Missing`. A one-time
+non-pruning operation was submitted from an ignored JSON patch file. It became
+`Synced/Healthy` and created only `capstone-platform`. Automated sync, pruning,
+and self-healing were then enabled by updating the Terraform-owned bootstrap
+chart. A deliberately corrupted project description became `OutOfSync` and was
+restored from Git: `ArgoSelfHeal=PASS`.
+
+Argo CD CLI 3.4.5 was installed from Winget and `argocd app get --core` showed
+the root app Synced and Healthy. A temporary local port-forward returned HTTP
+200 for the UI and `ok` for `/healthz`; it was stopped immediately. No admin
+password was printed or written to this repository.
+
+The no-change bootstrap plan returned exit code 0. Normal recovery order is:
+create the cluster root, apply the bootstrap root, and let the public Git source
+reconcile. Destruction is the reverse: deliberately remove/disable Argo-owned
+children first, destroy `terraform/bootstrap`, then destroy
+`terraform/cluster`. Deleting the cluster before bootstrap state is accepted
+only as a disaster-recovery exercise and requires state reconciliation.
