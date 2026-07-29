@@ -1,5 +1,8 @@
 # Kubernetes Platform Capstone
 
+> Runtime status: stopped and fully torn down on 2026-07-29. Source and build
+> history are retained; see `manual.md` section 9 for verified cleanup evidence.
+
 This is the clean handoff for milestone 11 of the Kubernetes learning path.
 The workspace intentionally starts with only this file. Do not copy the old
 `kub` repository into this directory wholesale.

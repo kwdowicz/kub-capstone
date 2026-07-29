@@ -4,7 +4,7 @@ This is the verified build record for the Kubernetes platform capstone. It is
 written from the commands and runtime evidence produced during implementation,
 not as a hypothetical tutorial.
 
-Status: in progress
+Status: stopped and fully torn down on 2026-07-29
 
 ## 1. Outcome and ownership
 
@@ -248,3 +248,30 @@ reconcile. Destruction is the reverse: deliberately remove/disable Argo-owned
 children first, destroy `terraform/bootstrap`, then destroy
 `terraform/cluster`. Deleting the cluster before bootstrap state is accepted
 only as a disaster-recovery exercise and requires state reconciliation.
+
+## 9. Final teardown
+
+The desktop build was deliberately stopped before TLS and the remaining
+capstone components. Teardown used inspected, saved Terraform destroy plans in
+reverse ownership order:
+
+```powershell
+terraform -chdir=terraform/bootstrap plan -destroy "-out=teardown-bootstrap.tfplan"
+terraform -chdir=terraform/bootstrap apply teardown-bootstrap.tfplan
+terraform -chdir=terraform/cluster plan -destroy "-out=teardown-cluster.tfplan"
+terraform -chdir=terraform/cluster apply teardown-cluster.tfplan
+```
+
+The bootstrap plan destroyed exactly two Helm releases and Namespace `argocd`.
+The cluster plan destroyed exactly `kind_cluster.platform`. Generated
+kubeconfig, Terraform state/plans/caches, Helm dependency cache, TLS certificate
+and key, and the newly created but untrusted mkcert CA were removed. The empty
+Docker network `kind` was removed after verifying it had zero attached
+containers. The lab-installed `kind`, `argocd`, and `mkcert` packages were
+uninstalled.
+
+Final audit found no `platform-capstone` container, Kind network, kube context,
+80/443 listener, capstone firewall rule, trusted mkcert CA, Terraform runtime
+artifact, or installed lab package. Source history and the public GitHub
+repository were deliberately preserved; deleting source control was not
+treated as infrastructure teardown.
